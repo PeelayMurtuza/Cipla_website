@@ -5,6 +5,7 @@ import About from "./components/About";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import "./App.css";
+import News from "./components/News";
 
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
@@ -90,6 +91,7 @@ export default function App() {
               { to: "/about", label: "About" },
               { to: "/login", label: "Login" },
               { to: "/register", label: "Register" },
+              { to: "/news", label: "News" },
             ].map((link) => (
               <NavLink
                 key={link.to}
@@ -130,6 +132,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/news" element={<News />} />
           </Routes>
         </main>
       </div>
