@@ -1,1 +1,60 @@
 @import "tailwindcss";
+
+/* subtle overlay for dark theme: copper radial hint */
+.min-h-screen .dark-bg-hint { /* not used in this version, kept as example */ }
+
+/* navbar sheen */
+nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0.75rem;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+  mix-blend-mode: overlay;
+}
+
+/* small responsive tweak */
+@media (max-width: 640px) {
+  nav { padding-left: 0.5rem; padding-right: 0.5rem; }
+}
+
+/* smooth transform on hover */
+nav:hover { transform: translateY(-2px); transition: transform 220ms ease; }
+
+
+/* Import Locomotive core styles */
+@import "locomotive-scroll/dist/locomotive-scroll.css";
+
+/* Optional custom scrollbar look */
+html[data-scroll-container] {
+  overflow: hidden;
+}
+
+[data-scroll-section] {
+  will-change: transform;
+}
+
+.scroll-content {
+  transition: transform 0.2s ease-out;
+}
+
+
+/* subtle no-scrollbar class */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* improved snap behavior */
+#carousel { scroll-snap-type: x mandatory; }
+
+/* remove focus outline for mouse but keep it for keyboard (accessibility) */
+:focus:not(:focus-visible) { outline: none; }
+
+/* gentle backdrop for hero's glass card */
+.hero-glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.55));
+  backdrop-filter: blur(8px);
+}
+
+/* small transform on hover to feel alive */
+.reveal:hover { transform: translateY(-2px); transition: transform 220ms ease; }
