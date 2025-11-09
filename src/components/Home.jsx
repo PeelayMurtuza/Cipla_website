@@ -1,1295 +1,1025 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import LocomotiveScroll from "locomotive-scroll";
-import "locomotive-scroll/dist/locomotive-scroll.css";
+import React, { useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
+import ScrollTrigger from 'gsap/ScrollTrigger';
+import LocomotiveScroll from 'locomotive-scroll';
+import { motion } from 'framer-motion';
 
-// Icons
-import {
-    StarIcon,
-    HeartIcon,
-    ShareIcon,
-    BookmarkIcon,
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    PlayIcon,
-    PauseIcon,
-    ChartBarIcon,
-    UserGroupIcon,
-    ClockIcon,
-    EyeIcon
-} from "@heroicons/react/24/solid";
+const Home = () => {
+  const smoothScrollRef = useRef(null);
+  const locoScrollRef = useRef(null);
 
-gsap.registerPlugin(ScrollTrigger);
+  useEffect(() => {
+    // Register GSAP plugins
+    gsap.registerPlugin(ScrollTrigger);
+    console.clear();
 
-/* ===========================================
-   Premium Pharma Home Page
-   =========================================== */
+    // Initialize Locomotive Scroll
+    const locoScroll = new LocomotiveScroll({
+      el: smoothScrollRef.current,
+      smooth: true,
+      multiplier: 1,
+      smartphone: { smooth: true },
+      tablet: { smooth: true }
+    });
 
-const PRODUCTS = [
-    {
-        id: 1,
-        name: "RespiraX Smart Inhaler",
-        tag: "Respiratory Care",
-        rating: 4.6,
-        reviews: 324,
-        desc: "Next-generation smart inhaler with real-time dose tracking, adherence analytics, and patient engagement features.",
-        img: "https://images.unsplash.com/photo-1585435557343-3b092031d5ad?w=500",
-        features: ["Dose Tracking", "Mobile App", "Environmental Sensors", "AI Analytics"],
-        price: "$299",
-        status: "Clinical Trials",
-        efficacy: "94%"
-    },
-    {
-        id: 2,
-        name: "ViroClear Antiviral Therapy",
-        tag: "Antiviral Treatment",
-        rating: 4.2,
-        reviews: 210,
-        desc: "Advanced antiviral formulation using lipid nanoparticle technology for improved cellular uptake.",
-        img: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500",
-        features: ["Broad Spectrum", "Fast Acting", "Oral Administration", "Pediatric Safe"],
-        price: "$45",
-        status: "FDA Approved",
-        efficacy: "87%"
-    },
-    {
-        id: 3,
-        name: "ChronicCare FDC Pack",
-        tag: "Chronic Disease Management",
-        rating: 4.8,
-        reviews: 120,
-        desc: "Comprehensive chronic care solution integrating multiple medications with digital adherence tracking.",
-        img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=500",
-        features: ["Multi-Drug Integration", "Compliance Tracking", "Auto Refill", "Telemedicine Ready"],
-        price: "$79/month",
-        status: "Market Ready",
-        efficacy: "96%"
-    },
-    {
-        id: 4,
-        name: "ColdChain Sense Pro",
-        tag: "Vaccine Logistics",
-        rating: 4.4,
-        reviews: 86,
-        desc: "Enterprise-grade IoT monitoring system with satellite connectivity and blockchain-based audit trails.",
-        img: "https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=500",
-        features: ["Real-time Monitoring", "Predictive Analytics", "Blockchain Audit", "Multi-Lingual"],
-        price: "$1,299",
-        status: "Deployed",
-        efficacy: "99.8%"
-    },
-    {
-        id: 5,
-        name: "NeuroSync Cognitive Aid",
-        tag: "Neurological Support",
-        rating: 4.7,
-        reviews: 156,
-        desc: "AI-powered cognitive training system with adaptive difficulty and progress tracking.",
-        img: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=500",
-        features: ["AI Adaptation", "Progress Analytics", "Clinician Portal", "Family Access"],
-        price: "$449",
-        status: "Clinical Trials",
-        efficacy: "91%"
-    }
-];
+    locoScrollRef.current = locoScroll;
 
-// Star Rating Component
-const StarRating = ({ rating, size = 16 }) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating - fullStars >= 0.5;
+    // Sync Locomotive Scroll with ScrollTrigger
+    locoScroll.on("scroll", ScrollTrigger.update);
 
-    return (
-        <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, i) => (
-                <div key={i} className="relative">
-                    <StarIcon
-                        className={`${i < fullStars ? 'text-amber-400' : 'text-gray-300'} 
-            ${size === 16 ? 'h-4 w-4' : 'h-5 w-5'}`}
-                        fill="currentColor"
-                    />
-                    {i === fullStars && hasHalfStar && (
-                        <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
-                            <StarIcon
-                                className={`text-amber-400 ${size === 16 ? 'h-4 w-4' : 'h-5 w-5'}`}
-                                fill="currentColor"
-                            />
-                        </div>
-                    )}
-                </div>
-            ))}
-            <span className="ml-2 text-sm font-medium text-gray-600">
-                {rating.toFixed(1)}
-            </span>
-        </div>
+    // ScrollTrigger proxy configuration
+    ScrollTrigger.scrollerProxy(smoothScrollRef.current, {
+      scrollTop(value) {
+        return arguments.length ? locoScroll.scrollTo(value, 0, 0) : locoScroll.scroll.instance.scroll.y;
+      },
+      getBoundingClientRect() {
+        return {
+          top: 0,
+          left: 0,
+          width: window.innerWidth,
+          height: window.innerHeight
+        };
+      },
+      pinType: smoothScrollRef.current.style.transform ? "transform" : "fixed"
+    });
+
+    // Section pinning animation
+    const sections = gsap.utils.toArray('section');
+    sections.forEach((section) => {
+      ScrollTrigger.create({
+        scroller: '.smooth-scroll',
+        trigger: section,
+        start: 'top top',
+        end: '+=100%',
+        pin: true,
+        pinSpacing: false
+      });
+    });
+
+    // Initialize all custom animations
+    initializeAllAnimations();
+
+    // Refresh handlers
+    ScrollTrigger.addEventListener("refresh", () => locoScroll.update());
+    ScrollTrigger.refresh();
+
+    // Handle resize
+    const handleResize = () => {
+      ScrollTrigger.refresh();
+      locoScroll.update();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (locoScrollRef.current) {
+        locoScrollRef.current.destroy();
+      }
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+  }, []);
+
+  const initializeAllAnimations = () => {
+    // Molecule animations
+    initializeMoleculeAnimation();
+    // Card animations
+    initializeCardAnimations();
+    // Stacked cards
+    initializeStackedCards();
+    // Lab equipment
+    initializeLabEquipmentAnimation();
+    // Pill path
+    initializePillPathAnimation();
+    // Research cards
+    initializeResearchCards();
+    // Medical stats
+    initializeMedicalStats();
+    // Clinical progress
+    initializeClinicalProgress();
+    // Drug interactions
+    initializeDrugInteractions();
+    // Panel animations
+    initializePanelAnimations();
+  };
+
+  const initializeMoleculeAnimation = () => {
+    const molecules = gsap.utils.toArray('.molecule');
+    molecules.forEach((molecule) => {
+      const atoms = molecule.querySelectorAll('.atom');
+      const bonds = molecule.querySelectorAll('.bond');
+      
+      gsap.to(atoms, {
+        scale: 1.2,
+        opacity: 0.8,
+        duration: 2,
+        repeat: -1,
+        yoyo: true,
+        stagger: 0.2,
+        ease: "sine.inOut"
+      });
+      
+      gsap.to(bonds, {
+        rotation: 360,
+        duration: 8,
+        repeat: -1,
+        ease: "none",
+        transformOrigin: "center center"
+      });
+    });
+  };
+
+  const initializeCardAnimations = () => {
+    const start = 'top top+=900';
+    
+    ['card-1', 'card-2', 'card-3'].forEach((cardClass, index) => {
+      const yPercent = [311, 208, 105][index];
+      const scale = [0.94, 0.96, 0.98][index];
+      
+      gsap.to(`.${cardClass}`, {
+        scrollTrigger: {
+          trigger: '.cards',
+          scroller: smoothScrollRef.current,
+          start: start,
+          end: () => `+=${document.querySelector('.cards')?.offsetHeight - 500 || 1000}`,
+          scrub: true,
+        },
+        yPercent: yPercent,
+        scale: scale,
+      });
+    });
+  };
+
+  const initializeStackedCards = () => {
+    const cardWrappers = gsap.utils.toArray(".card-wrapper");
+    if (cardWrappers.length === 0) return;
+
+    const scaleMax = gsap.utils.mapRange(1, cardWrappers.length - 1, 0.8, 1);
+    const time = 2;
+
+    gsap.set(cardWrappers, {
+      y: (index) => 30 * index,
+      transformOrigin: "center top",
+    });
+
+    const tl = gsap.timeline({
+      defaults: { ease: "none" },
+      scrollTrigger: {
+        trigger: ".trigger",
+        scroller: smoothScrollRef.current,
+        start: "top top",
+        end: `${window.innerHeight * 5} top`,
+        scrub: true,
+      }
+    });
+
+    tl.from('.card-container', {
+      y: () => window.innerHeight / 2,
+      duration: 1,
+    });
+
+    tl.from(".card-wrapper:not(:first-child)", {
+      y: () => window.innerHeight,
+      duration: time / 2,
+      stagger: time
+    });
+
+    tl.to(
+      ".card-wrapper:not(:last-child)",
+      {
+        rotationX: -20,
+        scale: (index) => scaleMax(index),
+        stagger: { each: time }
+      },
+      "<"
     );
-};
+  };
 
-// Stat Badge Component
-const StatBadge = ({ icon: Icon, value, label, color = "blue" }) => (
-    <motion.div
-        whileHover={{ scale: 1.05 }}
-        className={`flex items-center gap-3 p-4 rounded-2xl backdrop-blur-sm ${color === 'blue' ? 'bg-blue-500/10 text-blue-600' :
-                color === 'green' ? 'bg-green-500/10 text-green-600' :
-                    color === 'purple' ? 'bg-purple-500/10 text-purple-600' :
-                        'bg-amber-500/10 text-amber-600'
-            }`}
+  const initializeLabEquipmentAnimation = () => {
+    const equipment = gsap.utils.toArray('.lab-equipment');
+    equipment.forEach((item, index) => {
+      gsap.fromTo(item, 
+        {
+          y: 100,
+          opacity: 0,
+          rotation: index % 2 === 0 ? -5 : 5
+        },
+        {
+          y: 0,
+          opacity: 1,
+          rotation: 0,
+          duration: 1.5,
+          scrollTrigger: {
+            trigger: item,
+            scroller: smoothScrollRef.current,
+            start: "top 80%",
+            end: "bottom 20%",
+            scrub: true
+          }
+        }
+      );
+    });
+  };
+
+  const initializePillPathAnimation = () => {
+    const paths = document.querySelectorAll('.pill-path');
+    paths.forEach(path => {
+      const length = path.getTotalLength();
+      
+      gsap.set(path, {
+        strokeDasharray: length,
+        strokeDashoffset: length
+      });
+      
+      gsap.to(path, {
+        strokeDashoffset: 0,
+        duration: 3,
+        ease: "power2.inOut",
+        scrollTrigger: {
+          trigger: path,
+          scroller: smoothScrollRef.current,
+          start: "top center",
+          end: "bottom center",
+          scrub: true
+        }
+      });
+    });
+  };
+
+  const initializeResearchCards = () => {
+    const cards = gsap.utils.toArray('.research-card');
+    cards.forEach((card, index) => {
+      gsap.fromTo(card,
+        {
+          x: index % 2 === 0 ? -100 : 100,
+          opacity: 0,
+          rotationY: 15
+        },
+        {
+          x: 0,
+          opacity: 1,
+          rotationY: 0,
+          duration: 1,
+          scrollTrigger: {
+            trigger: card,
+            scroller: smoothScrollRef.current,
+            start: "top 85%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
+          }
+        }
+      );
+    });
+  };
+
+  const initializeMedicalStats = () => {
+    const counters = gsap.utils.toArray('.stat-number');
+    counters.forEach(counter => {
+      const target = parseInt(counter.getAttribute('data-target') || '0');
+      
+      ScrollTrigger.create({
+        trigger: counter,
+        scroller: smoothScrollRef.current,
+        start: "top 80%",
+        onEnter: () => {
+          gsap.to(counter, {
+            innerText: target,
+            duration: 2,
+            snap: { innerText: 1 },
+            ease: "power2.out",
+            onUpdate: function() {
+              const value = Math.ceil(this.targets()[0].innerText);
+              counter.innerText = value.toLocaleString();
+            }
+          });
+        }
+      });
+    });
+  };
+
+  const initializeClinicalProgress = () => {
+    const progressBars = gsap.utils.toArray('.progress-bar');
+    progressBars.forEach((bar) => {
+      const width = bar.getAttribute('data-width') || '0';
+      gsap.to(bar, {
+        width: `${width}%`,
+        duration: 2,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: bar,
+          scroller: smoothScrollRef.current,
+          start: "top 80%",
+          toggleActions: "play none none none"
+        }
+      });
+    });
+  };
+
+  const initializeDrugInteractions = () => {
+    const interactions = gsap.utils.toArray('.interaction-item');
+    interactions.forEach((item, index) => {
+      gsap.fromTo(item,
+        {
+          scale: 0.8,
+          opacity: 0,
+          rotationY: 90
+        },
+        {
+          scale: 1,
+          opacity: 1,
+          rotationY: 0,
+          duration: 1,
+          delay: index * 0.2,
+          scrollTrigger: {
+            trigger: item,
+            scroller: smoothScrollRef.current,
+            start: "top 85%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+    });
+  };
+
+  const initializePanelAnimations = () => {
+    gsap.to(".medical-panel", {
+      yPercent: -100,
+      ease: "none",
+      stagger: 0.5,
+      scrollTrigger: {
+        trigger: "#medical-container",
+        scroller: smoothScrollRef.current,
+        start: "top top",
+        end: "+=100%",
+        scrub: true,
+        pin: true
+      }
+    });
+
+    gsap.set(".medical-panel", { 
+      zIndex: (i, target, targets) => targets.length - i 
+    });
+
+    gsap.to('#text-fade', {
+      opacity: 0,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.medical-panel.blue',
+        scroller: smoothScrollRef.current,
+        start: 'bottom -100',
+        end: 'bottom -200',
+        scrub: true,
+      }
+    });
+  };
+
+  return (
+    <div 
+      ref={smoothScrollRef} 
+      className="smooth-scroll min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 overflow-hidden"
+      data-scroll-container
     >
-        <Icon className="h-6 w-6" />
-        <div>
-            <div className="text-lg font-bold">{value}</div>
-            <div className="text-sm opacity-75">{label}</div>
+      {/* Hero Section */}
+      <section className="min-h-screen flex items-center justify-center relative bg-gradient-to-br from-blue-900 to-teal-800">
+        <MoleculeStructure />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-blue-900/20 to-blue-900/40" />
+        
+        <div className="text-center text-white z-10 px-4 max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          >
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 tracking-tight">
+              <span className="block">HEALTHCARE</span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-200 mt-4">
+                INNOVATION
+              </span>
+            </h1>
+            <p className="text-xl md:text-2xl lg:text-3xl mb-12 opacity-90 font-light max-w-4xl mx-auto leading-relaxed">
+              Advancing medicine through cutting-edge research and pharmaceutical excellence
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold px-8 md:px-12 py-3 md:py-4 rounded-full text-lg transition-all duration-300 shadow-2xl"
+            >
+              Discover Our Research
+            </motion.button>
+          </motion.div>
         </div>
-    </motion.div>
-);
 
-// Reviews data moved outside component
-const REVIEWS_DATA = [
-    {
-        id: 1,
-        author: "Dr. A. Desai",
-        role: "Pulmonology Specialist",
-        hospital: "Apollo Hospitals, Mumbai",
-        text: "RespiraX has transformed how we manage asthma patients. The adherence tracking alone improved compliance by 62% in our clinic.",
-        rating: 5,
-        avatar: "D"
-    },
-    {
-        id: 2,
-        author: "Nurse R. Kumar",
-        role: "ICU Head Nurse",
-        hospital: "AIIMS Delhi",
-        text: "ColdChain Sense prevented three potential vaccine spoilage incidents last month. The real-time alerts are life-saving.",
-        rating: 4,
-        avatar: "R"
-    },
-    {
-        id: 3,
-        author: "Dr. S. Rao",
-        role: "Infectious Disease Specialist",
-        hospital: "Fortis Bangalore",
-        text: "ViroClear's bioavailability is remarkable. We're seeing faster recovery times with minimal side effects in our patients.",
-        rating: 4,
-        avatar: "S"
-    }
-];
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="flex flex-col items-center space-y-2"
+          >
+            <span className="text-white/70 text-sm">Scroll to Explore</span>
+            <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+              <div className="w-1 h-3 bg-white/70 rounded-full mt-2" />
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-// Reviews Section Component
-const ReviewsSection = () => {
-    const [autoPlay, setAutoPlay] = useState(false);
-    const [currentReview, setCurrentReview] = useState(0);
-    const carouselRef = useRef(null);
-    const autoPlayIntervalRef = useRef(null);
-
-    const scrollToReview = (index) => {
-        const el = carouselRef.current;
-        if (!el) return;
-        
-        const reviewWidth = 320;
-        const gap = 32;
-        const scrollPosition = index * (reviewWidth + gap);
-        
-        el.scrollTo({ left: scrollPosition, behavior: 'smooth' });
-        setCurrentReview(index);
-    };
-
-    const handleScroll = () => {
-        const el = carouselRef.current;
-        if (!el) return;
-        
-        const scrollLeft = el.scrollLeft;
-        const reviewWidth = 320;
-        const gap = 32;
-        const newIndex = Math.round(scrollLeft / (reviewWidth + gap));
-        
-        setCurrentReview(newIndex);
-    };
-
-    const scrollCarousel = (dir = 1) => {
-        const el = carouselRef.current;
-        if (!el) return;
-        
-        const step = el.clientWidth * 0.8;
-        const targetScroll = el.scrollLeft + (dir * step);
-        
-        gsap.to(el, {
-            scrollLeft: targetScroll,
-            duration: 0.8,
-            ease: "power2.inOut"
-        });
-    };
-
-    // Auto-play effect
-    useEffect(() => {
-        if (!autoPlay) {
-            if (autoPlayIntervalRef.current) {
-                clearInterval(autoPlayIntervalRef.current);
-            }
-            return;
-        }
-
-        autoPlayIntervalRef.current = setInterval(() => {
-            const nextIndex = (currentReview + 1) % REVIEWS_DATA.length;
-            scrollToReview(nextIndex);
-        }, 4000);
-
-        return () => {
-            if (autoPlayIntervalRef.current) {
-                clearInterval(autoPlayIntervalRef.current);
-            }
-        };
-    }, [autoPlay, currentReview]);
-
-    return (
-        <section data-scroll-section className="py-20 bg-gradient-to-b from-gray-50 to-white">
-            <div className="container mx-auto px-6 lg:px-12">
-                <motion.div
-                    className="text-center mb-16 reveal"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                >
-                    <h2 className="text-4xl md:text-5xl font-black mb-6 bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
-                        Trusted by Practitioners
-                    </h2>
-                </motion.div>
-
-                <div className="relative">
-                    {/* Carousel Controls */}
-                    <div className="flex justify-between items-center mb-8">
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => scrollCarousel(-1)}
-                            className="p-4 rounded-2xl shadow-2xl border border-gray-200 hover:shadow-3xl transition-all group"
-                        >
-                            <ChevronLeftIcon className="w-6 h-6 text-gray-600 group-hover:text-indigo-600 transition-colors" />
-                        </motion.button>
-
-                        <div className="flex items-center gap-4">
-                            <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => setAutoPlay(!autoPlay)}
-                                className={`p-4 rounded-2xl shadow-2xl border transition-all ${autoPlay
-                                        ? 'bg-green-500 text-white border-green-500'
-                                        : 'bg-white text-gray-600 border-gray-200 hover:text-indigo-600'
-                                    }`}
-                            >
-                                {autoPlay ? <PauseIcon className="w-6 h-6" /> : <PlayIcon className="w-6 h-6" />}
-                            </motion.button>
-                            <span className="text-sm text-gray-500 font-medium">
-                                {autoPlay ? 'Auto-playing' : 'Click to auto-play'}
-                            </span>
-                        </div>
-
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => scrollCarousel(1)}
-                            className="p-4 rounded-2xl bg-white shadow-2xl border border-gray-200 hover:shadow-3xl transition-all group"
-                        >
-                            <ChevronRightIcon className="w-6 h-6 text-gray-600 group-hover:text-indigo-600 transition-colors" />
-                        </motion.button>
-                    </div>
-
-                    {/* Progress Indicator */}
-                    <div className="flex justify-center mb-6">
-                        <div className="flex gap-2">
-                            {REVIEWS_DATA.map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => scrollToReview(index)}
-                                    className={`w-3 h-3 rounded-full transition-all ${currentReview === index
-                                            ? 'bg-indigo-600 w-8'
-                                            : 'bg-gray-300 hover:bg-gray-400'
-                                        }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Enhanced Carousel Container */}
-                    <div
-                        ref={carouselRef}
-                        className="flex gap-8 overflow-x-auto scrollbar-hide snap-x snap-mandatory py-8 px-4"
-                        style={{ scrollBehavior: 'smooth' }}
-                        onScroll={handleScroll}
-                    >
-                        {REVIEWS_DATA.map((review, index) => (
-                            <motion.div
-                                key={review.id}
-                                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{
-                                    duration: 0.6,
-                                    delay: index * 0.1,
-                                    type: "spring",
-                                    stiffness: 100
-                                }}
-                                viewport={{ once: true, margin: "-50px" }}
-                                whileHover={{ y: -10 }}
-                                className="flex-none w-80 md:w-96 snap-start cursor-grab active:cursor-grabbing"
-                            >
-                                <div className=" rounded-3xl p-8 shadow-2xl border border-gray-200 h-full relative overflow-hidden group hover:shadow-3xl transition-all duration-500">
-
-                                    {/* Background Gradient Effect */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                                    {/* Verified Badge with Animation */}
-                                    <motion.div
-                                        initial={{ scale: 0, rotate: -180 }}
-                                        whileInView={{ scale: 1, rotate: 0 }}
-                                        transition={{ delay: index * 0.2 + 0.3, type: "spring" }}
-                                        className="absolute top-6 right-6 z-10"
-                                    >
-                                        <div className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1">
-                                            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                                            Verified
-                                        </div>
-                                    </motion.div>
-
-                                    {/* Review Header */}
-                                    <div className="flex items-start justify-between mb-6 relative z-10">
-                                        <div className="flex items-center gap-4">
-                                            <motion.div
-                                                whileHover={{ scale: 1.1, rotate: 5 }}
-                                                className="relative"
-                                            >
-                                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                                                    {review.avatar}
-                                                </div>
-                                                {/* Online Indicator */}
-                                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
-                                            </motion.div>
-
-                                            <div>
-                                                <motion.h3
-                                                    className="font-bold text-gray-900 text-lg"
-                                                    whileHover={{ color: "#4f46e5" }}
-                                                    transition={{ duration: 0.2 }}
-                                                >
-                                                    {review.author}
-                                                </motion.h3>
-                                                <div className="text-sm text-gray-600 font-medium">{review.role}</div>
-                                                <div className="text-xs text-gray-500 mt-1">{review.hospital}</div>
-
-                                                {/* Experience Badge */}
-                                                <div className="flex items-center gap-1 mt-2">
-                                                    <div className="w-2 h-2 bg-amber-500 rounded-full" />
-                                                    <span className="text-xs text-amber-600 font-medium">10+ years experience</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Rating with Animation */}
-                                    <motion.div
-                                        className="mb-6 relative z-10"
-                                        initial={{ opacity: 0 }}
-                                        whileInView={{ opacity: 1 }}
-                                        transition={{ delay: index * 0.2 + 0.4 }}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <StarRating rating={review.rating} size={20} />
-                                            <span className="text-sm font-medium text-gray-600">
-                                                {review.rating}/5
-                                            </span>
-                                        </div>
-
-                                        {/* Rating Progress Bar */}
-                                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                whileInView={{ width: `${(review.rating / 5) * 100}%` }}
-                                                transition={{ duration: 1, delay: index * 0.2 + 0.5 }}
-                                                className="bg-gradient-to-r from-amber-400 to-orange-500 h-1.5 rounded-full"
-                                            />
-                                        </div>
-                                    </motion.div>
-
-                                    {/* Review Text */}
-                                    <motion.blockquote
-                                        initial={{ opacity: 0 }}
-                                        whileInView={{ opacity: 1 }}
-                                        transition={{ delay: index * 0.2 + 0.6 }}
-                                        className="text-gray-700 leading-relaxed mb-8 relative z-10 text-lg italic"
-                                    >
-                                        <div className="text-4xl text-gray-300 absolute -top-4 -left-2">"</div>
-                                        {review.text}
-                                        <div className="text-4xl text-gray-300 absolute -bottom-8 -right-2">"</div>
-                                    </motion.blockquote>
-
-                                    {/* Review Metrics */}
-                                    <div className="grid grid-cols-3 gap-4 mb-6 relative z-10">
-                                        <div className="text-center p-3 bg-blue-50 rounded-xl">
-                                            <div className="text-lg font-bold text-blue-600">24</div>
-                                            <div className="text-xs text-blue-500">Likes</div>
-                                        </div>
-                                        <div className="text-center p-3 bg-green-50 rounded-xl">
-                                            <div className="text-lg font-bold text-green-600">8</div>
-                                            <div className="text-xs text-green-500">Shares</div>
-                                        </div>
-                                        <div className="text-center p-3 bg-purple-50 rounded-xl">
-                                            <div className="text-lg font-bold text-purple-600">156</div>
-                                            <div className="text-xs text-purple-500">Views</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Buttons */}
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.2 + 0.7 }}
-                                        className="flex items-center justify-between relative z-10 pt-4 border-t border-gray-100"
-                                    >
-                                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                                            <ClockIcon className="w-4 h-4" />
-                                            <span>2 days ago</span>
-                                        </div>
-
-                                        <div className="flex gap-3">
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-medium hover:bg-blue-100 transition-colors"
-                                            >
-                                                <HeartIcon className="w-4 h-4" />
-                                                Like
-                                            </motion.button>
-
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 rounded-xl font-medium hover:bg-green-100 transition-colors"
-                                            >
-                                                <ShareIcon className="w-4 h-4" />
-                                                Share
-                                            </motion.button>
-                                        </div>
-                                    </motion.div>
-
-                                    {/* Hover Effect Border */}
-                                    <div className="absolute inset-0 rounded-3xl border-2 border-transparent group-hover:border-indigo-200 transition-all duration-500 pointer-events-none" />
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-
-                    {/* Carousel Stats */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        className="flex justify-center items-center gap-6 mt-8 text-sm text-gray-600"
-                    >
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                            <span>Live Reviews</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <UserGroupIcon className="w-4 h-4" />
-                            <span>{REVIEWS_DATA.length} Verified Practitioners</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <StarIcon className="w-4 h-4 text-amber-400" />
-                            <span>4.7 Average Rating</span>
-                        </div>
-                    </motion.div>
+      {/* Statistics Section */}
+      <section className="min-h-screen flex items-center justify-center bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+            {[
+              { number: 125, suffix: '+', label: 'Research Projects', color: 'from-blue-500 to-cyan-500' },
+              { number: 50, suffix: '+', label: 'Clinical Trials', color: 'from-green-500 to-emerald-500' },
+              { number: 1000000, suffix: '+', label: 'Patients Helped', color: 'from-purple-500 to-indigo-500' },
+              { number: 25, suffix: '+', label: 'Countries Served', color: 'from-orange-500 to-red-500' }
+            ].map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className={`bg-gradient-to-r ${stat.color} text-white rounded-2xl p-4 md:p-8 shadow-lg`}>
+                  <div className="stat-number text-2xl md:text-4xl lg:text-5xl font-bold" data-target={stat.number}>
+                    0
+                  </div>
+                  <div className="text-lg md:text-2xl font-semibold">{stat.suffix}</div>
+                  <div className="text-white/90 text-xs md:text-sm mt-2">{stat.label}</div>
                 </div>
-            </div>
-        </section>
-    );
-};
-
-// Additional Sections
-const FeaturesSection = () => (
-    <section data-scroll-section className="py-20 bg-white">
-        <div className="container mx-auto px-6 lg:px-12">
-            <motion.div
-                className="text-center mb-16 reveal"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-            >
-                <h2 className="text-4xl md:text-5xl font-black mb-6 bg-gradient-to-r from-gray-900 to-purple-900 bg-clip-text text-transparent">
-                    Why Choose Cipla?
-                </h2>
-            </motion.div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {[
-                    { icon: ChartBarIcon, title: "Clinical Excellence", desc: "94% success rate in clinical trials", color: "blue" },
-                    { icon: UserGroupIcon, title: "Global Reach", desc: "Serving patients in 80+ countries", color: "green" },
-                    { icon: ClockIcon, title: "Fast Innovation", desc: "50+ active R&D projects", color: "purple" },
-                    { icon: EyeIcon, title: "Transparent", desc: "Verified practitioner reviews", color: "amber" },
-                ].map((feature, index) => (
-                    <motion.div
-                        key={feature.title}
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        viewport={{ once: true }}
-                        whileHover={{ y: -10 }}
-                        className="text-center p-8 bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-lg border border-gray-200 hover:shadow-xl transition-all"
-                    >
-                        <StatBadge
-                            icon={feature.icon}
-                            value=""
-                            label={feature.title}
-                            color={feature.color}
-                        />
-                        <p className="text-gray-600 mt-4">{feature.desc}</p>
-                    </motion.div>
-                ))}
-            </div>
+              </div>
+            ))}
+          </div>
         </div>
-    </section>
-);
+      </section>
 
-const StatsSection = () => (
-    <section data-scroll-section className="py-20 bg-white">
-        <div className="container mx-auto px-6 lg:px-12">
-            <motion.div
-                className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={{
-                    hidden: { opacity: 0 },
-                    visible: {
-                        opacity: 1,
-                        transition: {
-                            staggerChildren: 0.2
-                        }
-                    }
-                }}
-            >
-                {[
-                    { value: "50+", label: "Active R&D Projects", description: "Innovations in pipeline", color: "from-blue-500 to-cyan-500", icon: "🔬" },
-                    { value: "80+", label: "Countries Reached", description: "Global presence", color: "from-green-500 to-emerald-500", icon: "🌍" },
-                    { value: "1M+", label: "Lives Impacted", description: "Positive outcomes", color: "from-purple-500 to-pink-500", icon: "❤️" },
-                    { value: "94%", label: "Success Rate", description: "Clinical trials", color: "from-amber-500 to-orange-500", icon: "📊" }
-                ].map((stat, index) => (
-                    <motion.div
-                        key={stat.label}
-                        variants={{
-                            hidden: { opacity: 0, y: 30 },
-                            visible: { opacity: 1, y: 0 }
-                        }}
-                        whileHover={{ y: -10 }}
-                        className="bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 shadow-2xl border border-gray-200 text-center group"
-                    >
-                        <div className={`text-4xl mb-4 w-20 h-20 rounded-2xl bg-gradient-to-r ${stat.color} flex items-center justify-center text-white mx-auto group-hover:scale-110 transition-transform duration-300`}>
-                            {stat.icon}
-                        </div>
-                        <div className="text-4xl font-black text-gray-900 mb-2 countup" data-to={stat.value.replace('+', '').replace('%', '')}>
-                            0
-                        </div>
-                        <div className="text-lg font-semibold text-gray-700 mb-2">{stat.label}</div>
-                        <div className="text-sm text-gray-500">{stat.description}</div>
-                    </motion.div>
-                ))}
-            </motion.div>
+      {/* Cards Section */}
+      <section className="cards min-h-screen flex items-center justify-center relative bg-gradient-to-br from-blue-900 to-teal-800">
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-12 md:mb-20">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+              Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Solutions</span>
+            </h2>
+            <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto">
+              Innovative pharmaceutical products with cutting-edge technology
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            {[
+              { 
+                title: "Advanced Delivery", 
+                description: "Innovative systems for maximum efficacy",
+                gradient: "from-cyan-500 to-blue-600"
+              },
+              { 
+                title: "Precision Medicine", 
+                description: "Tailored treatments based on genetics",
+                gradient: "from-purple-500 to-pink-600"
+              },
+              { 
+                title: "Clinical Excellence", 
+                description: "Evidence-based medical solutions",
+                gradient: "from-orange-500 to-red-600"
+              }
+            ].map((card, index) => (
+              <div 
+                key={index}
+                className={`card-${index + 1} group relative overflow-hidden rounded-3xl p-6 md:p-8 backdrop-blur-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-500`}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                <div className="relative z-10">
+                  <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <span className="text-xl md:text-2xl">💊</span>
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">{card.title}</h3>
+                  <p className="text-gray-300 leading-relaxed text-sm md:text-base">{card.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-    </section>
-);
+      </section>
 
-const CTASection = () => (
-    <section data-scroll-section className="py-20 bg-gradient-to-br from-gray-900 to-purple-900 text-white">
-        <div className="container mx-auto px-6 lg:px-12 text-center">
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="max-w-4xl mx-auto"
-            >
-                <h2 className="text-4xl md:text-5xl font-black mb-6">
-                    Ready to Transform Healthcare?
+      {/* Stacked Cards Section */}
+        <section className="trigger min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-purple-900/30 rounded-4xl">
+            <div className="max-w-4xl mx-auto px-4">
+            <div className="text-center mb-12 md:mb-20">
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 pt-10">
+                Development <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-500">Pipeline</span>
                 </h2>
-                <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                    Join thousands of healthcare professionals already using Cipla innovations to deliver better patient outcomes.
+                <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
+                Comprehensive drug development from research to market
                 </p>
-
-                <div className="flex flex-wrap gap-4 justify-center">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-gray-900 rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all"
-                    >
-                        Request Full Report
-                    </motion.button>
-
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-2xl font-bold border border-white/20 hover:bg-white/20 transition-all"
-                    >
-                        Schedule Demo
-                    </motion.button>
-                </div>
-            </motion.div>
-        </div>
-    </section>
-);
-
-/* ============================================
-   Advanced Card Component with Stacking
-   ============================================ */
-const Card = ({ card, position, isTop, onSwipe, onBookmark, isBookmarked }) => {
-    const x = useMotionValue(0);
-    const rotateRaw = useTransform(x, [-200, 200], [-20, 20]);
-    const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 0.7, 1, 0.7, 0]);
-
-    const isFront = isTop;
-    const rotate = useTransform(() => {
-        const offset = isFront ? 0 : position % 2 ? 4 : -4;
-        return `${rotateRaw.get() + offset}deg`;
-    });
-
-    const scale = useTransform(() => {
-        return 1 - position * 0.05;
-    });
-
-    const y = useTransform(() => {
-        return position * 15;
-    });
-
-    const handleDragEnd = (event, info) => {
-        const threshold = 100;
-        const velocity = info.velocity.x;
-
-        if (Math.abs(x.get()) > threshold || Math.abs(velocity) > 500) {
-            const direction = x.get() > 0 ? 1 : -1;
-            onSwipe(direction);
-        } else {
-            // Return to center
-            gsap.to(x, { value: 0, duration: 0.5, ease: "elastic.out(1,0.6)" });
-        }
-    };
-
-    const statusColors = {
-        'Clinical Trials': 'bg-purple-500/20 text-purple-600',
-        'FDA Approved': 'bg-green-500/20 text-green-600',
-        'Market Ready': 'bg-blue-500/20 text-blue-600',
-        'Deployed': 'bg-amber-500/20 text-amber-600'
-    };
-
-    return (
-        <motion.div
-            style={{
-                x,
-                rotate,
-                opacity,
-                scale,
-                y,
-                zIndex: 100 - position,
-            }}
-            className="absolute top-0 left-0 right-0 mx-auto w-[90%] max-w-sm cursor-grab active:cursor-grabbing"
-            drag={isFront ? "y" : false}
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={handleDragEnd}
-            animate={{
-                transition: { type: "spring", stiffness: 300, damping: 30 }
-            }}
-        >
-            <motion.div
-                className={`bg-white rounded-3xl overflow-hidden shadow-2xl border-2 ${isFront
-                        ? 'border-gray-200 hover:shadow-3xl'
-                        : 'border-gray-100'
-                    } transition-all duration-300`}
-                whileHover={isFront ? { y: -8 } : {}}
-            >
-                {/* Image Section */}
-                <div className="relative h-48 overflow-hidden">
-                    <motion.img
-                        src={card.img}
-                        alt={card.name}
-                        className="w-full h-full object-cover"
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ duration: 0.3 }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
-                    {/* Status Badge */}
-                    <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold ${statusColors[card.status] || 'bg-gray-500/20 text-gray-600'}`}>
-                        {card.status}
+            </div>
+            
+            <div className="card-container relative h-[400px] md:h-[600px] flex items-center justify-center">
+                {[1, 2, 3].map((item) => (
+                <div key={item} className="card-wrapper absolute">
+                    <div className="card bg-gradient-to-br from-green-500 to-cyan-600 rounded-3xl p-6 md:p-8 shadow-2xl w-72 md:w-80 lg:w-96 transform-gpu">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 flex items-center justify-center mb-4 md:mb-6">
+                        <span className="text-white text-base md:text-lg font-bold">{item}</span>
                     </div>
-
-                    {/* Action Buttons */}
-                    <div className="absolute top-4 left-4 flex gap-2">
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => onBookmark(card.id)}
-                            className={`p-2 rounded-xl backdrop-blur-sm ${isBookmarked
-                                    ? 'bg-rose-500 text-white'
-                                    : 'bg-white/20 text-white hover:bg-rose-500'
-                                }`}
-                        >
-                            <BookmarkIcon className="w-4 h-4" />
-                        </motion.button>
-                    </div>
-
-                    {/* Content Overlay */}
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                        <span className="inline-block px-2 py-1 bg-white/20 rounded-full text-xs backdrop-blur-sm">
-                            {card.tag}
-                        </span>
-                        <h3 className="text-xl font-bold mt-2">{card.name}</h3>
-                    </div>
-                </div>
-
-                {/* Content Section */}
-                <div className="p-6">
-                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                        {card.desc}
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">
+                        {item === 1 ? 'Research & Discovery' : item === 2 ? 'Clinical Development' : 'Market Access'}
+                    </h3>
+                    <p className="text-white/90 leading-relaxed text-sm md:text-base">
+                        {item === 1 ? 'Advanced research methodologies' : 
+                        item === 2 ? 'Rigorous clinical trials' : 
+                        'Regulatory approval strategies'}
                     </p>
-
-                    {/* Rating */}
-                    <div className="flex items-center justify-between mb-4">
-                        <StarRating rating={card.rating} />
-                        <span className="text-sm text-gray-500">{card.reviews} reviews</span>
                     </div>
-
-                    {/* Features */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        {card.features.map((feature, index) => (
-                            <span
-                                key={index}
-                                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium"
-                            >
-                                {feature}
-                            </span>
-                        ))}
-                    </div>
-
-                    {/* Price & Efficacy */}
-                    <div className="flex items-center justify-between">
-                        <div className="text-2xl font-bold text-gray-900">
-                            {card.price}
-                        </div>
-                        <div className="text-right">
-                            <div className="text-sm text-gray-500">Efficacy</div>
-                            <div className="text-lg font-bold text-green-600">{card.efficacy}</div>
-                        </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    {isFront && (
-                        <div className="flex gap-3 mt-6">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => onSwipe(-1)}
-                                className="flex-1 py-3 bg-red-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-red-500/25"
-                            >
-                                Not Interested
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => onSwipe(1)}
-                                className="flex-1 py-3 bg-green-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-green-500/25"
-                            >
-                                Interested
-                            </motion.button>
-                        </div>
-                    )}
                 </div>
+                ))}
+            </div>
+            </div>
+        </section>
 
-                {/* Swipe Hint */}
-                {isFront && (
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-8">
-                        <motion.div
-                            animate={{ x: [-5, 0, -5] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                            className="text-red-500 text-sm font-semibold"
-                        >
-                            ← Skip
-                        </motion.div>
-                        <motion.div
-                            animate={{ x: [5, 0, 5] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                            className="text-green-500 text-sm font-semibold"
-                        >
-                            Interested →
-                        </motion.div>
+      {/* Research Section */}
+      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 items-center">
+            <div>
+              <span className="text-blue-600 font-semibold text-sm md:text-lg tracking-wider">RESEARCH & DEVELOPMENT</span>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mt-4 mb-6">
+                Medical <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">Breakthroughs</span>
+              </h2>
+              <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-8">
+                Innovative treatments addressing unmet medical needs worldwide.
+              </p>
+              
+              <div className="space-y-4">
+                {[
+                  'Advanced Drug Discovery',
+                  'Clinical Trial Management',
+                  'Regulatory Compliance',
+                  'Patient Safety Monitoring'
+                ].map((feature, index) => (
+                  <motion.div 
+                    key={index}
+                    className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                    whileHover={{ x: 10 }}
+                  >
+                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white" />
                     </div>
-                )}
-            </motion.div>
-        </motion.div>
-    );
+                    <span className="text-gray-800 font-medium text-sm md:text-base">{feature}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="relative">
+              <div className="lab-equipment space-y-4 md:space-y-6">
+                <div className="bg-white rounded-2xl p-4 md:p-6 shadow-xl border border-blue-100">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 md:mb-4">
+                    <span className="text-xl md:text-2xl">🔬</span>
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Laboratory Research</h3>
+                  <p className="text-gray-600 text-sm md:text-base">State-of-the-art molecular research</p>
+                </div>
+                
+                <div className="bg-white rounded-2xl p-4 md:p-6 shadow-xl border border-green-100">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 md:mb-4">
+                    <span className="text-xl md:text-2xl">💊</span>
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Drug Formulation</h3>
+                  <p className="text-gray-600 text-sm md:text-base">Advanced development techniques</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Products Section */}
+      <section className="min-h-screen flex items-center justify-center bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12 md:mb-20">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">Portfolio</span>
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+              Innovative medications for various conditions with maximum efficacy.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {[
+              {
+                category: "Cardiology",
+                name: "CardioProtect Plus",
+                description: "Advanced cardiovascular protection",
+                status: "Phase III",
+                color: "from-red-500 to-pink-500"
+              },
+              {
+                category: "Oncology",
+                name: "OncoTarget Therapy",
+                description: "Precision cancer treatment",
+                status: "FDA Approved",
+                color: "from-purple-500 to-indigo-500"
+              },
+              {
+                category: "Neurology",
+                name: "NeuroEnhance Formula",
+                description: "Neurological disorders treatment",
+                status: "Phase II",
+                color: "from-blue-500 to-cyan-500"
+              }
+            ].map((product, index) => (
+              <div 
+                key={index}
+                className="research-card group bg-gradient-to-br from-white to-gray-50 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100"
+              >
+                <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-r ${product.color} flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  <span className="text-white text-xl md:text-2xl">💊</span>
+                </div>
+                <div className="mb-4">
+                  <span className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wide">{product.category}</span>
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 mt-2">{product.name}</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed text-sm md:text-base mb-4 md:mb-6">{product.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold ${
+                    product.status.includes('Approved') ? 'bg-green-100 text-green-800' :
+                    product.status.includes('Phase') ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {product.status}
+                  </span>
+                  <button className="text-blue-600 hover:text-blue-700 font-semibold text-xs md:text-sm flex items-center space-x-1">
+                    <span>Learn More</span>
+                    <span>→</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Process Visualization */}
+      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-teal-800">
+        <div className="max-w-6xl mx-auto px-4 text-center text-white">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-8">
+            Development <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-200">Process</span>
+          </h2>
+          
+          <div className="relative">
+            <svg className="w-full h-24 md:h-32" viewBox="0 0 800 200">
+              <path
+                className="pill-path stroke-cyan-400 stroke-2 fill-none"
+                d="M 50,100 Q 200,50 350,100 T 650,100"
+                strokeWidth="4"
+              />
+              
+              {[
+                { x: 50, y: 100, step: "Research", icon: "🔍" },
+                { x: 200, y: 50, step: "Discovery", icon: "💡" },
+                { x: 350, y: 100, step: "Testing", icon: "🧪" },
+                { x: 500, y: 150, step: "Trials", icon: "👥" },
+                { x: 650, y: 100, step: "Approval", icon: "✅" }
+              ].map((node, index) => (
+                <g key={index}>
+                  <circle cx={node.x} cy={node.y} r="16" fill="#06b6d4" className="animate-pulse" />
+                  <text x={node.x} y={node.y} textAnchor="middle" dy="4" fill="white" fontSize="10">
+                    {node.icon}
+                  </text>
+                  <text x={node.x} y={node.y + 30} textAnchor="middle" fill="#cbd5e1" fontSize="8">
+                    {node.step}
+                  </text>
+                </g>
+              ))}
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      {/* Clinical Trials Section */}
+      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 items-center">
+            <div>
+              <span className="text-blue-600 font-semibold text-sm md:text-lg tracking-wider">CLINICAL DEVELOPMENT</span>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mt-4 mb-6">
+                Clinical <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">Research</span>
+              </h2>
+              <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-8">
+                Ensuring safety and efficacy through rigorous clinical trials.
+              </p>
+              
+              <div className="space-y-4">
+                {[
+                  { icon: "👥", text: "Patient-Centric Design" },
+                  { icon: "📊", text: "Evidence Collection" },
+                  { icon: "🛡️", text: "Ethical Practices" },
+                  { icon: "🌍", text: "Global Locations" }
+                ].map((item, index) => (
+                  <motion.div 
+                    key={index}
+                    className="flex items-center space-x-4"
+                    whileHover={{ x: 10 }}
+                  >
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <span className="text-lg md:text-xl">{item.icon}</span>
+                    </div>
+                    <span className="text-gray-800 font-medium text-sm md:text-lg">{item.text}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+            
+            <ClinicalTrialsProgress />
+          </div>
+        </div>
+      </section>
+
+      {/* Support Section */}
+      <section className="min-h-screen flex items-center justify-center bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <PharmaSupportCard
+            tag="/ MEDICAL SUPPORT"
+            text={
+              <>
+                <strong>Healthcare professionals and patients:</strong> Access comprehensive 
+                information about medications and support resources.
+              </>
+            }
+            examples={[
+              "What are the side effects?",
+              "How should this drug be stored?",
+              "Any drug interactions?",
+              "Where to find clinical data?",
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* Medical Panels Section */}
+      <section id="medical-container" className="relative min-h-screen">
+        {[
+          { 
+            bg: "from-blue-600 to-cyan-600", 
+            title: "Patient Safety",
+            subtitle: "Rigorous testing and quality",
+            icon: "🛡️"
+          },
+          { 
+            bg: "from-green-600 to-emerald-600", 
+            title: "Research Excellence",
+            subtitle: "Innovating for better health",
+            icon: "🔬"
+          },
+          { 
+            bg: "from-purple-600 to-indigo-600", 
+            title: "Global Impact",
+            subtitle: "Accessible healthcare worldwide",
+            icon: "🌍"
+          },
+          { 
+            bg: "from-red-600 to-pink-600", 
+            title: "Your Partner",
+            subtitle: "Committed to improving lives",
+            icon: "❤️"
+          }
+        ].map((panel, index) => (
+          <div key={index} className={`medical-panel h-screen flex items-center justify-center bg-gradient-to-br ${panel.bg} relative overflow-hidden`}>
+            <div className="text-center text-white px-4 max-w-4xl mx-auto">
+              <div className="text-4xl md:text-6xl mb-6 md:mb-8">{panel.icon}</div>
+              <motion.h2 
+                className="text-3xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                {panel.title}
+              </motion.h2>
+              <motion.p 
+                className="text-xl md:text-2xl lg:text-3xl opacity-90"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                {panel.subtitle}
+              </motion.p>
+
+              {index === 1 && (
+                <div id="text-fade" className="absolute bottom-8 md:bottom-20 text-white text-lg md:text-xl font-light">
+                  Scroll to discover more
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* Final CTA Section */}
+      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-cyan-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-white/10" />
+        <div className="text-center text-white px-4 relative z-10 max-w-4xl mx-auto">
+          <motion.h2 
+            className="text-4xl md:text-5xl lg:text-7xl font-bold mb-6 md:mb-8"
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1 }}
+          >
+            Advancing <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-200">Healthcare</span>
+          </motion.h2>
+          <motion.p 
+            className="text-lg md:text-xl lg:text-2xl mb-8 md:mb-12 opacity-90"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.3 }}
+          >
+            Join us in developing life-changing treatments
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-white text-blue-600 font-semibold px-8 md:px-12 py-3 md:py-4 rounded-full text-base md:text-lg hover:bg-gray-100 transition-all duration-300 shadow-2xl"
+            >
+              Contact Our Team
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="border-2 border-white text-white font-semibold px-8 md:px-12 py-3 md:py-4 rounded-full text-base md:text-lg hover:bg-white hover:text-blue-600 transition-all duration-300"
+            >
+              View Clinical Trials
+            </motion.button>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  );
 };
 
-/* =========================
-   Main Home Component
-   ========================= */
-export default function Home() {
-    const [cards, setCards] = useState(PRODUCTS);
-    const [history, setHistory] = useState([]);
-    const [isBookmarked, setIsBookmarked] = useState(new Set());
-    const [autoPlay, setAutoPlay] = useState(false);
-    const containerRef = useRef(null);
-    const locoRef = useRef(null);
-    const carouselRef = useRef(null);
-    const autoPlayRef = useRef(null);
-
-    // Initialize Locomotive Scroll + GSAP
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        const loco = new LocomotiveScroll({
-            el: container,
-            smooth: true,
-            lerp: 0.08,
-            multiplier: 1,
-            smartphone: { smooth: true },
-            tablet: { smooth: true }
-        });
-        locoRef.current = loco;
-
-        // GSAP ScrollTrigger integration
-        ScrollTrigger.scrollerProxy(container, {
-            scrollTop(value) {
-                return arguments.length ? loco.scrollTo(value, { duration: 0, disableLerp: true }) : loco.scroll.instance.scroll.y;
-            },
-            getBoundingClientRect() {
-                return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight };
-            },
-            pinType: container.style.transform ? "transform" : "fixed",
-        });
-
-        loco.on("scroll", ScrollTrigger.update);
-        ScrollTrigger.addEventListener("refresh", () => loco.update());
-        ScrollTrigger.refresh();
-
-        // Advanced animations
-        gsap.utils.toArray(".reveal").forEach((el) => {
-            gsap.fromTo(el,
-                { autoAlpha: 0, y: 60 },
-                {
-                    autoAlpha: 1,
-                    y: 0,
-                    duration: 1.2,
-                    ease: "power4.out",
-                    scrollTrigger: {
-                        trigger: el,
-                        scroller: container,
-                        start: "top 85%",
-                        end: "bottom 20%",
-                        toggleActions: "play none none reverse"
-                    }
-                }
-            );
-        });
-
-        // Parallax elements
-        gsap.utils.toArray(".parallax").forEach((el) => {
-            gsap.to(el, {
-                yPercent: -30,
-                ease: "none",
-                scrollTrigger: {
-                    trigger: el,
-                    start: "top bottom",
-                    end: "bottom top",
-                    scrub: true,
-                    scroller: container
-                }
-            });
-        });
-
-        // Stats count-up
-        gsap.utils.toArray(".countup").forEach((el) => {
-            const to = parseInt(el.dataset.to || "0", 10);
-            gsap.fromTo(
-                el,
-                { innerText: 0 },
-                {
-                    innerText: to,
-                    duration: 2,
-                    ease: "power2.out",
-                    snap: { innerText: 1 },
-                    onUpdate() {
-                        el.innerText = Math.floor(this.targets()[0].innerText).toLocaleString();
-                    },
-                    scrollTrigger: {
-                        trigger: el,
-                        scroller: container,
-                        start: "top 90%",
-                        once: true
-                    },
-                }
-            );
-        });
-
-        return () => {
-            try {
-                loco.destroy();
-            } catch (e) { }
-            ScrollTrigger.getAll().forEach((t) => t.kill());
-        };
-    }, []);
-
-    // Auto-play carousel
-    useEffect(() => {
-        if (!autoPlay) {
-            if (autoPlayRef.current) {
-                clearInterval(autoPlayRef.current);
-            }
-            return;
-        }
-
-        autoPlayRef.current = setInterval(() => {
-            scrollCarousel(1);
-        }, 4000);
-
-        return () => {
-            if (autoPlayRef.current) {
-                clearInterval(autoPlayRef.current);
-            }
-        };
-    }, [autoPlay]);
-
-    // Card swipe functions
-    const swipe = useCallback((dir = 1) => {
-        if (cards.length === 0) return;
-
-        const currentCard = cards[0];
-        setHistory(prev => [currentCard, ...prev]);
-        setCards(prev => prev.slice(1));
-    }, [cards]);
-
-    const undo = () => {
-        if (history.length === 0) return;
-        const [last, ...rest] = history;
-        setCards(prev => [last, ...prev]);
-        setHistory(rest);
-    };
-
-    const reset = () => {
-        setCards(PRODUCTS);
-        setHistory([]);
-        setIsBookmarked(new Set());
-    };
-
-    const toggleBookmark = (id) => {
-        const newBookmarked = new Set(isBookmarked);
-        if (newBookmarked.has(id)) {
-            newBookmarked.delete(id);
-        } else {
-            newBookmarked.add(id);
-        }
-        setIsBookmarked(newBookmarked);
-    };
-
-    const scrollCarousel = (dir = 1) => {
-        const el = carouselRef.current;
-        if (!el) return;
-
-        const step = el.clientWidth * 0.8;
-        const targetScroll = el.scrollLeft + (dir * step);
-
-        gsap.to(el, {
-            scrollLeft: targetScroll,
-            duration: 0.8,
-            ease: "power2.inOut"
-        });
-    };
-
-    // Enhanced Card Component with Stacking Effect
-    const CardStack = () => {
-        return (
-            <div className="relative h-[600px] w-full max-w-md mx-auto">
-                <AnimatePresence>
-                    {cards.map((card, index) => {
-                        const position = index;
-                        const isTop = position === 0;
-
-                        return (
-                            <Card
-                                key={card.id}
-                                card={card}
-                                position={position}
-                                isTop={isTop}
-                                onSwipe={swipe}
-                                onBookmark={toggleBookmark}
-                                isBookmarked={isBookmarked.has(card.id)}
-                            />
-                        );
-                    })}
-                </AnimatePresence>
-
-                {/* Empty State */}
-                {cards.length === 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="absolute inset-0 flex items-center justify-center"
-                    >
-                        <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl">
-                            <div className="text-6xl mb-4">🎉</div>
-                            <h3 className="text-2xl font-bold mb-2">All Caught Up!</h3>
-                            <p className="text-gray-600 mb-6">
-                                You've reviewed all available innovations
-                            </p>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={reset}
-                                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-500 text-white rounded-xl font-semibold"
-                            >
-                                Reset & Explore Again
-                            </motion.button>
-                        </div>
-                    </motion.div>
-                )}
+// Supporting Components
+const MoleculeStructure = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden opacity-10">
+      {[1, 2, 3, 4].map((group) => (
+        <div key={group} className={`molecule absolute ${getRandomPosition()}`}>
+          <div className="atom absolute w-3 h-3 md:w-4 md:h-4 bg-cyan-400 rounded-full animate-pulse" />
+          {[0, 120, 240].map((angle, i) => (
+            <div key={i} className="absolute transform -translate-x-1/2 -translate-y-1/2">
+              <div 
+                className="bond w-12 h-1 md:w-16 md:h-1 bg-cyan-300 rounded-full origin-left"
+                style={{ transform: `rotate(${angle}deg)` }}
+              />
+              <div 
+                className="atom w-2 h-2 md:w-3 md:h-3 bg-blue-400 rounded-full absolute top-1/2 left-12 md:left-16 transform -translate-y-1/2"
+              />
             </div>
-        );
-    };
-
-    // Enhanced Hero Section
-    const HeroSection = () => (
-        <section data-scroll-section className="min-h-screen flex items-center justify-center relative overflow-hidden">
-            {/* Animated Background */}
-            <div className="absolute inset-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50/30 to-pink-50/50" />
-                <motion.div
-                    className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 8, repeat: Infinity }}
-                />
-                <motion.div
-                    className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"
-                    animate={{ scale: [1.2, 1, 1.2], opacity: [0.4, 0.7, 0.4] }}
-                    transition={{ duration: 10, repeat: Infinity, delay: 2 }}
-                />
-            </div>
-
-            <div className="container mx-auto px-6 lg:px-12 relative z-10">
-                <div className="grid lg:grid-cols-2 gap-12 items-center">
-                    {/* Left Content */}
-                    <motion.div
-                        className="space-y-8 reveal"
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8 }}
-                    >
-                        <div>
-                            <motion.span
-                                className="inline-block px-4 py-2 rounded-full bg-amber-50 text-amber-700 text-sm font-semibold shadow-sm mb-6"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                            >
-                                🚀 Featured Innovation
-                            </motion.span>
-
-                            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight">
-                                Transforming
-                                <span className="block bg-gradient-to-r from-indigo-600 via-pink-500 to-amber-400 bg-clip-text text-transparent">
-                                    Healthcare
-                                </span>
-                            </h1>
-
-                            <p className="text-xl text-gray-600 mt-6 max-w-xl leading-relaxed">
-                                Discover groundbreaking pharmaceutical innovations with AI-powered insights,
-                                verified practitioner reviews, and comprehensive clinical data.
-                            </p>
-                        </div>
-
-                        <div className="flex flex-wrap gap-4">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-pink-500 text-white rounded-2xl font-bold shadow-2xl shadow-indigo-500/25 hover:shadow-3xl transition-all"
-                            >
-                                Explore Innovations
-                            </motion.button>
-
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="px-8 py-4 bg-white/80 backdrop-blur-sm text-gray-900 rounded-2xl font-bold border border-gray-200 hover:bg-white transition-all"
-                            >
-                                View Clinical Data
-                            </motion.button>
-                        </div>
-
-                        {/* Quick Stats */}
-                        <motion.div
-                            className="grid grid-cols-3 gap-6 pt-8"
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.6 }}
-                        >
-                            {[
-                                { value: "50+", label: "R&D Projects" },
-                                { value: "80+", label: "Countries" },
-                                { value: "94%", label: "Success Rate" }
-                            ].map((stat, index) => (
-                                <div key={stat.label} className="text-center">
-                                    <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                                    <div className="text-sm text-gray-600 mt-1">{stat.label}</div>
-                                </div>
-                            ))}
-                        </motion.div>
-                    </motion.div>
-
-                    {/* Right - Card Preview */}
-                    <motion.div
-                        className="reveal"
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
-                    >
-                        <div className="relative">
-                            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-gray-200">
-                                <div className="grid grid-cols-2 gap-4">
-                                    {PRODUCTS.slice(0, 4).map((product) => (
-                                        <motion.div
-                                            key={product.id}
-                                            whileHover={{ y: -5 }}
-                                            className="flex gap-3 items-start p-3 rounded-2xl bg-white/50 hover:bg-white transition-all"
-                                        >
-                                            <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-                                                <img
-                                                    src={product.img}
-                                                    alt={product.name}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold text-sm text-gray-900 truncate">
-                                                    {product.name}
-                                                </h3>
-                                                <div className="flex items-center gap-1 mt-1">
-                                                    <StarRating rating={product.rating} size={12} />
-                                                </div>
-                                                <div className="text-xs text-gray-500 mt-1">
-                                                    {product.reviews} reviews
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Floating Badge */}
-                            <motion.div
-                                className="absolute -right-4 -top-4"
-                                animate={{ y: [0, -10, 0] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                            >
-                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-semibold">
-                                    Live • Verified
-                                </div>
-                            </motion.div>
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-
-            {/* Scroll Indicator */}
-            <motion.div
-                className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-            >
-                <div className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
-                    <motion.div
-                        animate={{ y: [0, 12, 0] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="w-1 h-3 bg-gray-400 rounded-full mt-2"
-                    />
-                </div>
-            </motion.div>
-        </section>
-    );
-
-    return (
-        <div data-scroll-container ref={containerRef} className="min-h-screen bg-white text-gray-900">
-            {/* Hero Section */}
-            <HeroSection />
-
-            {/* Card Stack Section */}
-            <section data-scroll-section className="py-20 bg-gradient-to-b from-white to-gray-50">
-                <div className="container mx-auto px-6 lg:px-12">
-                    <motion.div
-                        className="text-center mb-16 reveal"
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
-                        <h2 className="text-4xl md:text-5xl font-black mb-6 bg-gradient-to-r from-gray-900 to-indigo-900 bg-clip-text text-transparent">
-                            Discover Innovations
-                        </h2>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                            Swipe through our latest pharmaceutical innovations. Right for interested, left to skip.
-                        </p>
-                    </motion.div>
-
-                    <div className="flex justify-center">
-                        <CardStack />
-                    </div>
-
-                    {/* Quick Actions */}
-                    {cards.length > 0 && (
-                        <motion.div
-                            className="flex flex-wrap gap-4 justify-center mt-12 reveal"
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                        >
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => swipe(-1)}
-                                className="px-6 py-3 bg-red-500 text-white rounded-xl font-semibold shadow-lg shadow-red-500/25"
-                            >
-                                Discard Current
-                            </motion.button>
-
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => swipe(1)}
-                                className="px-6 py-3 bg-green-500 text-white rounded-xl font-semibold shadow-lg shadow-green-500/25"
-                            >
-                                Shortlist Current
-                            </motion.button>
-
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={undo}
-                                className="px-6 py-3 bg-gray-500 text-white rounded-xl font-semibold shadow-lg shadow-gray-500/25"
-                            >
-                                Undo Last Action
-                            </motion.button>
-                        </motion.div>
-                    )}
-                </div>
-            </section>
-
-            {/* Features Section */}
-            <FeaturesSection />
-
-            {/* Reviews Section */}
-            <ReviewsSection />
-
-            {/* Stats Section */}
-            <StatsSection />
-
-            {/* CTA Section */}
-            <CTASection />
-
-            <footer className="py-12 text-center text-gray-500">
-                <div className="container mx-auto px-6">
-                    <p>© {new Date().getFullYear()} Cipla Pharmaceuticals — Innovating for Better Healthcare</p>
-                </div>
-            </footer>
+          ))}
         </div>
-    );
-}
+      ))}
+    </div>
+  );
+};
+
+const getRandomPosition = () => {
+  const positions = [
+    'top-10 left-10',
+    'top-20 right-20',
+    'bottom-20 left-1/4',   
+    'bottom-10 right-1/3',
+  ];
+  return positions[Math.floor(Math.random() * positions.length)];
+};
+
+const ClinicalTrialsProgress = () => {
+  const phases = [
+    { phase: "Phase I", progress: 100, status: "Completed", color: "from-green-500 to-emerald-500" },
+    { phase: "Phase II", progress: 85, status: "In Progress", color: "from-blue-500 to-cyan-500" },
+    { phase: "Phase III", progress: 60, status: "Recruiting", color: "from-purple-500 to-indigo-500" },
+    { phase: "Phase IV", progress: 30, status: "Planning", color: "from-orange-500 to-amber-500" }
+  ];
+
+  return (
+    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl border border-gray-100">
+      <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Clinical Trials Progress</h3>
+      <div className="space-y-4 md:space-y-6">
+        {phases.map((phase, index) => (
+          <motion.div 
+            key={phase.phase}
+            className="space-y-2"
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: index * 0.1 }}
+          >
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-gray-700 text-sm md:text-base">{phase.phase}</span>
+              <span className="text-xs md:text-sm text-gray-500">{phase.status}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 md:h-3">
+              <motion.div 
+                className={`h-2 md:h-3 rounded-full bg-gradient-to-r ${phase.color} progress-bar`}
+                data-width={phase.progress}
+                initial={{ width: 0 }}
+                whileInView={{ width: `${phase.progress}%` }}
+                transition={{ duration: 1.5, delay: index * 0.2 }}
+              />
+            </div>
+            <div className="text-right text-xs md:text-sm text-gray-600">{phase.progress}% Complete</div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PharmaSupportCard = ({ tag, text, examples }) => {
+  return (
+    <div className="w-full max-w-4xl md:max-w-6xl mx-auto space-y-6 md:space-y-8 p-6 md:p-12 rounded-3xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 shadow-2xl">
+      <div>
+        <p className="mb-3 text-xs md:text-sm font-semibold uppercase tracking-wider text-blue-600">{tag}</p>
+        <hr className="border-blue-200" />
+      </div>
+      <p className="max-w-4xl text-lg md:text-2xl leading-relaxed text-gray-800 font-light">{text}</p>
+      <div>
+        <PharmaTypewrite examples={examples} />
+        <hr className="border-blue-200" />
+      </div>
+      <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
+        <motion.button 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 py-3 md:py-4 px-6 md:px-8 text-base md:text-lg font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-cyan-700 shadow-xl flex items-center justify-center space-x-2"
+        >
+          <span>Contact Medical Info</span>
+          <span>📞</span>
+        </motion.button>
+        <motion.button 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="rounded-full border-2 border-blue-600 text-blue-600 py-3 md:py-4 px-6 md:px-8 text-base md:text-lg font-semibold transition-all duration-300 hover:bg-blue-600 hover:text-white flex items-center justify-center space-x-2"
+        >
+          <span>Download Info</span>
+          <span>📄</span>
+        </motion.button>
+      </div>
+    </div>
+  );
+};
+
+const PharmaTypewrite = ({ examples }) => {
+  const [exampleIndex, setExampleIndex] = useState(0);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setExampleIndex((pv) => (pv + 1) % examples.length);
+    }, 5500);
+    return () => clearInterval(intervalId);
+  }, [examples.length]);
+
+  return (
+    <p className="mb-4 text-sm md:text-base font-medium uppercase text-blue-600">
+      <span className="inline-block size-2 md:size-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full animate-pulse" />
+      <span className="ml-3 md:ml-4 tracking-wide text-xs md:text-base">
+        FREQUENT QUESTIONS:{" "}
+        <span className="text-gray-900 font-semibold">
+          {examples[exampleIndex].split("").map((l, i) => (
+            <motion.span
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              transition={{
+                delay: 5,
+                duration: 0.25,
+                ease: "easeInOut",
+              }}
+              key={`${exampleIndex}-${i}`}
+              className="relative"
+            >
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  delay: i * 0.025,
+                  duration: 0,
+                }}
+              >
+                {l}
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{
+                  delay: i * 0.025,
+                  times: [0, 0.1, 1],
+                  duration: 0.125,
+                  ease: "easeInOut",
+                }}
+                className="absolute bottom-[2px] left-[1px] right-0 top-[2px] bg-gradient-to-r from-blue-600 to-cyan-600"
+              />
+            </motion.span>
+          ))}
+        </span>
+      </span>
+    </p>
+  );
+};
+
+export default Home ;
